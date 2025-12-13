@@ -4,7 +4,6 @@ from uuid import uuid4
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils.text import slugify
 from django.utils.translation import gettext as _
 
 
@@ -43,6 +42,7 @@ class UserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
+
 def user_image_path(instance: "User", filename: str) -> pathlib.Path:
     filename = f"user-{instance.id}-{uuid4()}" + pathlib.Path(filename).suffix
     return pathlib.Path("uploads/images") / pathlib.Path(filename)
@@ -52,18 +52,11 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
     following = models.ManyToManyField(
-        "self",
-        related_name=_("followers"),
-        symmetrical=False,
-        blank=True
+        "self", related_name=_("followers"), symmetrical=False, blank=True
     )
-    bio = models.TextField(_("bio"))
-    birth_date = models.DateField(_("birth date"))
-    avatar = models.ImageField(
-        null=True,
-        blank=True,
-        upload_to=user_image_path
-    )
+    bio = models.TextField(_("bio"), null=True, blank=True)
+    birth_date = models.DateField(_("birth date"), null=True, blank=True)
+    avatar = models.ImageField(null=True, blank=True, upload_to=user_image_path)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
