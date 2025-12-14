@@ -6,6 +6,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext as _
 
+from statusphere import settings
+
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
@@ -52,11 +54,18 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
     following = models.ManyToManyField(
-        "self", related_name=_("followers"), symmetrical=False, blank=True
+        settings.AUTH_USER_MODEL,
+        related_name=_("followers"),
+        symmetrical=False,
+        blank=True,
     )
     bio = models.TextField(_("bio"), null=True, blank=True)
     birth_date = models.DateField(_("birth date"), null=True, blank=True)
-    avatar = models.ImageField(null=True, blank=True, upload_to=user_image_path)
+    avatar = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to=user_image_path
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
