@@ -1,9 +1,12 @@
-from rest_framework import generics, permissions
+from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 
 from user.models import User
-from user.permissions import IsUserAllIsAuthenticatedReadOnly
+from user.permissions import (
+    IsUserAllIsAuthenticatedReadOnly,
+    AnonOnly
+)
 from user.serializers import UserSerializer
 
 
@@ -13,7 +16,7 @@ class CreateTokenView(ObtainAuthToken):
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (AnonOnly,)
 
 
 class UserViewSet(generics.RetrieveUpdateAPIView):

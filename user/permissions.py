@@ -11,3 +11,8 @@ class IsUserAllIsAuthenticatedReadOnly(permissions.BasePermission):
             ) or
             request.user.id == obj.id
         )
+
+
+class AnonOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return not bool(request.user and request.user.is_authenticated)
