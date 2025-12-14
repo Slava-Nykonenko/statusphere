@@ -32,18 +32,33 @@ class PostListSerializer(PostSerializer):
     likes = serializers.IntegerField(read_only=True)
     shares = serializers.IntegerField(read_only=True)
     comments_num = serializers.IntegerField(read_only=True)
-    hashtags = serializers.StringRelatedField(
-        many=True, read_only=True
-    )  # change it to the nested HashtagSerializer
+    hashtags = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Post
         fields = (
             "author",
+            "content_preview",
+            "media_files",
+            "hashtags",
+            "likes",
+            "shares",
+            "comments_num",
+        )
+
+
+class PostRetrieveSerializer(PostListSerializer):
+
+    class Meta:
+        model = Post
+        fields = (
+            "author",
+            "created_at",
             "content",
             "media_files",
             "hashtags",
             "likes",
             "shares",
             "comments_num",
+            "comments",
         )

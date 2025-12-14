@@ -2,7 +2,11 @@ from django.db.models.aggregates import Count
 from rest_framework.viewsets import ModelViewSet
 
 from social_media.models import Post
-from social_media.serializers import PostSerializer, PostListSerializer
+from social_media.serializers import (
+    PostSerializer,
+    PostListSerializer,
+    PostRetrieveSerializer,
+)
 
 
 class NewsFeed(ModelViewSet):
@@ -11,7 +15,7 @@ class NewsFeed(ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        if self.action == "list":
+        if self.action in ("list", "retrieve"):
             queryset = queryset.annotate(
                 likes=Count("liked_by"),
                 shares=Count("shared_by"),
@@ -22,6 +26,8 @@ class NewsFeed(ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return PostListSerializer
+        elif self.action == "retrieve":
+            return PostRetrieveSerializer
         return PostSerializer
 
     def perform_create(self, serializer):

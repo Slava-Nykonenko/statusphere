@@ -40,6 +40,12 @@ class Post(models.Model):
         symmetrical=False,
     )
 
+    def content_preview(self):
+        output = self.content
+        if len(output) > 250:
+            output = output[:250] + "..."
+        return output
+
 
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

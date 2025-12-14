@@ -61,11 +61,7 @@ class User(AbstractUser):
     )
     bio = models.TextField(_("bio"), null=True, blank=True)
     birth_date = models.DateField(_("birth date"), null=True, blank=True)
-    avatar = models.ImageField(
-        null=True,
-        blank=True,
-        upload_to=user_image_path
-    )
+    avatar = models.ImageField(null=True, blank=True, upload_to=user_image_path)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -73,4 +69,4 @@ class User(AbstractUser):
     objects = UserManager()
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} (ID: {self.id})"
+        return f"{self.first_name} {self.last_name}"
