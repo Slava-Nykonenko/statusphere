@@ -20,11 +20,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         with transaction.atomic():
-            hashtags = validated_data.pop("hashtags")
             post = Post.objects.create(**validated_data)
-            for hashtag in hashtags:
-                hashtag = Hashtag.objects.get_or_create(**hashtag)
-                post.hashtags.add(hashtag)
+            if validated_data.get("hashtags"):
+                hashtags = validated_data.pop("hashtags")
+                for hashtag in hashtags:
+                    hashtag = Hashtag.objects.get_or_create(**hashtag)
+                    post.hashtags.add(hashtag)
             return post
 
 
@@ -105,7 +106,12 @@ class SharedPostSerializer(PostListSerializer):
 class RepostSerializer(PostListSerializer):
     class Meta:
         model = Post
-        fields = ("id", "author")
+        fields = ("id", "author", "content")
+
+
+class RepostMakeSerializer(PostSerializer):
+    class Meta(PostSerializer.Meta):
+        fields = ("content",)
 
 
 class PostRetrieveSerializer(PostListSerializer):

@@ -12,6 +12,8 @@ from social_media.serializers import (
     PostRetrieveSerializer,
     CommentSerializer,
     ReactionSerializer,
+    RepostSerializer,
+    RepostMakeSerializer,
 )
 
 
@@ -74,3 +76,12 @@ class ReactionViewSet(ModelViewSet):
             ReactionSerializer(reaction).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+
+class RepostViewSet(ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = RepostMakeSerializer
+
+    def perform_create(self, serializer):
+        post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
+        serializer.save(author=self.request.user, shared_post=post)
