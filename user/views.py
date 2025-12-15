@@ -5,7 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from user.models import User
 from user.permissions import IsUserAllIsAuthenticatedReadOnly, AnonOnly
-from user.serializers import UserSerializer, UserRetrieveSerializer
+from user.serializers import UserSerializer, UserRetrieveSerializer, UserListSerializer
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -23,6 +23,8 @@ class UserViewSet(ModelViewSet):
     permission_classes = (IsUserAllIsAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
-        if self.action == "retrieve":
+        if self.action == "list":
+            return UserListSerializer
+        elif self.action == "retrieve":
             return UserRetrieveSerializer
         return UserSerializer

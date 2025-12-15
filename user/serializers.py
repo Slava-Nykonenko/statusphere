@@ -90,3 +90,10 @@ class UserRetrieveSerializer(UserSerializer):
             "bio",
             "posts",
         )
+
+
+class UserListSerializer(UserSerializer):
+    full_name = serializers.CharField(read_only=True, source="__str__")
+
+    class Meta(UserSerializer.Meta):
+        fields = ("id", "full_name", "avatar")
