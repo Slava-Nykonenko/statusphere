@@ -73,10 +73,24 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ("id", "author", "content", "media_files", "created_at")
 
 
+class SharedPostSerializer(PostListSerializer):
+    class Meta(PostSerializer.Meta):
+        fields = ("id", "author", "content", "media_files", "created_at")
+
+
+class RepostSerializer(PostListSerializer):
+    class Meta:
+        model = Post
+        fields = ("id", "author")
+
+
 class PostRetrieveSerializer(PostListSerializer):
-    liked_by = serializers.StringRelatedField(many=True, read_only=True)
-    shared_by = serializers.StringRelatedField(many=True, read_only=True)
+    reactions = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="type"
+    )
     comments = CommentSerializer(many=True, read_only=True)
+    shared_post = SharedPostSerializer(many=False, read_only=True)
+    reposts = RepostSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
@@ -85,11 +99,12 @@ class PostRetrieveSerializer(PostListSerializer):
             "created_at",
             "content",
             "media_files",
+            "shared_post",
             "hashtags",
             "likes",
-            "liked_by",
+            "reactions",
             "shares",
-            "shared_by",
+            "reposts",
             "comments_num",
             "comments",
         )

@@ -1,6 +1,8 @@
 import pathlib
 from uuid import uuid4
 
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from statusphere import settings
@@ -21,30 +23,26 @@ class Post(models.Model):
     )
     shared_post = models.ForeignKey(
         "self",
-        related_name="child_posts",
+        related_name="reposts",
         null=True,
         blank=True,
         on_delete=models.CASCADE,
     )
     hashtags = models.ManyToManyField("Hashtag", blank=True, related_name="posts")
-    liked_by = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        related_name="liked_post",
-        symmetrical=False,
-    )
-    shared_by = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        related_name="parent_post",
-        symmetrical=False,
-    )
+    reactions = GenericRelation("Reaction")
 
     def content_preview(self):
         output = self.content
         if len(output) > 250:
             output = output[:250] + "..."
         return output
+
+    def shared_post_info(self):
+        return {
+            "post_id": self.id,
+            "sharer": self.author.first_name + " " + self.author.last_name,
+            "sharer_id": self.author.id,
+        }
 
 
 class Comment(models.Model):
@@ -55,6 +53,7 @@ class Comment(models.Model):
         null=True, blank=True, upload_to=user_media_files_path
     )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    reactions = GenericRelation("Reaction")
 
     def __str__(self):
         return (
@@ -68,3 +67,31 @@ class Hashtag(models.Model):
 
     def __str__(self):
         return "#" + self.name
+
+
+class Reaction(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    REACTION_CHOICES = [
+        ("LIKE", "Like"),
+        ("LOVE", "Love"),
+        ("HAHA", "Haha"),
+        ("WOW", "Wow"),
+        ("SAD", "Sad"),
+        ("ANGRY", "Angry"),
+    ]
+    type = models.CharField(max_length=5, choices=REACTION_CHOICES, default="LIKE")
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    class Meta:
+        unique_together = ["user", "content_type", "object_id"]
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.user.username} reacted {self.get_type_display()} on "
+            f"{self.content_type.model} #{self.object_id}"
+        )

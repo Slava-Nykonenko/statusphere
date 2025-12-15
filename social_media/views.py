@@ -17,10 +17,11 @@ class NewsFeed(ModelViewSet):
         queryset = self.queryset
         if self.action in ("list", "retrieve"):
             queryset = queryset.annotate(
-                likes=Count("liked_by"),
-                shares=Count("shared_by"),
+                likes=Count("reactions"),
+                shares=Count("reposts"),
                 comments_num=Count("comments"),
             )
+
         return queryset
 
     def get_serializer_class(self):
