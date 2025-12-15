@@ -11,7 +11,7 @@ from social_media.serializers import (
 )
 
 
-class NewsFeed(ModelViewSet):
+class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 

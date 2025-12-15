@@ -1,15 +1,18 @@
 from django.urls import path, include
+from rest_framework_nested import routers
 from rest_framework.routers import DefaultRouter
 
-from social_media.views import NewsFeed, CommentViewSet
+from social_media.views import PostViewSet, CommentViewSet
 
 router = DefaultRouter()
-router.register("newsfeed", NewsFeed)
-router.register("comments", CommentViewSet)
+router.register("posts", PostViewSet)
+posts_router = routers.NestedSimpleRouter(router, "posts", lookup="post")
+posts_router.register("comments", CommentViewSet, basename="post-comments")
 
 
 app_name = "social_media"
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("", include(posts_router.urls)),
 ]
