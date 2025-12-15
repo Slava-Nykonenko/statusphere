@@ -1,11 +1,13 @@
 from django.db.models.aggregates import Count
+from rest_framework.generics import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 
-from social_media.models import Post
+from social_media.models import Post, Comment
 from social_media.serializers import (
     PostSerializer,
     PostListSerializer,
     PostRetrieveSerializer,
+    CommentSerializer,
 )
 
 
@@ -33,3 +35,12 @@ class NewsFeed(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class CommentViewSet(ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
+        serializer.save(author=self.request.user, post=post)
