@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.translation import gettext as _
 
 from statusphere import settings
 
@@ -70,14 +71,14 @@ class Hashtag(models.Model):
 
 
 class Reaction(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     REACTION_CHOICES = [
-        ("LIKE", "Like"),
-        ("LOVE", "Love"),
-        ("HAHA", "Haha"),
-        ("WOW", "Wow"),
-        ("SAD", "Sad"),
-        ("ANGRY", "Angry"),
+        ("LIKE", _("Like")),
+        ("LOVE", _("Love")),
+        ("HAHA", _("Haha")),
+        ("WOW", _("Wow")),
+        ("SAD", _("Sad")),
+        ("ANGRY", _("Angry")),
     ]
     type = models.CharField(max_length=5, choices=REACTION_CHOICES, default="LIKE")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -85,13 +86,14 @@ class Reaction(models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
-        unique_together = ["user", "content_type", "object_id"]
+        unique_together = ["author", "content_type", "object_id"]
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
 
     def __str__(self):
         return (
-            f"{self.user.username} reacted {self.get_type_display()} on "
-            f"{self.content_type.model} #{self.object_id}"
+            f"{self.author.first_name} {self.author.last_name} reacted "
+            f"{self.get_type_display()} on {self.content_type.model} "
+            f"#{self.object_id}"
         )

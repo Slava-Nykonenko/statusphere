@@ -2,13 +2,13 @@ from django.urls import path, include
 from rest_framework_nested import routers
 from rest_framework.routers import DefaultRouter
 
-from social_media.views import PostViewSet, CommentViewSet
+from social_media.views import PostViewSet, CommentViewSet, ReactionViewSet
 
 router = DefaultRouter()
 router.register("posts", PostViewSet)
 posts_router = routers.NestedSimpleRouter(router, "posts", lookup="post")
 posts_router.register("comments", CommentViewSet, basename="post-comments")
-
+posts_router.register("reactions", ReactionViewSet, basename="post-reactions")
 
 app_name = "social_media"
 

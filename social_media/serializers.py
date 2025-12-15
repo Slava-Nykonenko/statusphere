@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from social_media.models import Post, Hashtag, Comment
+from social_media.models import Post, Hashtag, Comment, Reaction
 
 
 class HashtagSerializer(serializers.ModelSerializer):
@@ -81,6 +81,22 @@ class CommentPostSerializer(CommentSerializer):
         )
 
 
+class ReactionSerializer(serializers.ModelSerializer):
+    object_id = serializers.IntegerField(write_only=True)
+    object_type = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Reaction
+        fields = ("type", "object_id", "object_type")
+
+
+class ReactionPostSerializer(ReactionSerializer):
+    author = serializers.StringRelatedField(many=False, read_only=True)
+
+    class Meta(ReactionSerializer.Meta):
+        fields = ("type", "author")
+
+
 class SharedPostSerializer(PostListSerializer):
     class Meta(PostSerializer.Meta):
         fields = ("id", "author", "content", "media_files", "created_at")
@@ -93,9 +109,7 @@ class RepostSerializer(PostListSerializer):
 
 
 class PostRetrieveSerializer(PostListSerializer):
-    reactions = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field="type"
-    )
+    reactions = ReactionPostSerializer(many=True, read_only=True)
     comments = CommentPostSerializer(many=True, read_only=True)
     shared_post = SharedPostSerializer(many=False, read_only=True)
     reposts = RepostSerializer(many=True, read_only=True)
