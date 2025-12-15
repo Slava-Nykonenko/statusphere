@@ -46,7 +46,7 @@ class PostPreviewSerializer(PostSerializer):
         return output
 
 
-class PostListSerializer(PostSerializer):
+class PostListSerializer(PostPreviewSerializer):
     likes = serializers.IntegerField(read_only=True)
     shares = serializers.IntegerField(read_only=True)
     comments_num = serializers.IntegerField(read_only=True)
@@ -56,9 +56,11 @@ class PostListSerializer(PostSerializer):
     class Meta:
         model = Post
         fields = (
+            "id",
             "author",
             "media_files",
             "shared_post",
+            "content_preview",
             "hashtags",
             "likes",
             "shares",

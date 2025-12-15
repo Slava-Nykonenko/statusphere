@@ -17,7 +17,9 @@ def user_media_files_path(instance: "Post" | "Comment", filename: str) -> pathli
 
 class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
+    )
     content = models.TextField(null=True, blank=True)
     media_files = models.FileField(
         upload_to=user_media_files_path, null=True, blank=True
@@ -31,6 +33,9 @@ class Post(models.Model):
     )
     hashtags = models.ManyToManyField("Hashtag", blank=True, related_name="posts")
     reactions = GenericRelation("Reaction")
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def content_preview(self):
         output = self.content
@@ -56,6 +61,9 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     reactions = GenericRelation("Reaction")
 
+    class Meta:
+        ordering = ["created_at"]
+
     def __str__(self):
         return (
             f"{self.author.first_name} {self.author.last_name}: "
@@ -65,6 +73,9 @@ class Comment(models.Model):
 
 class Hashtag(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        ordering = ["name"]
 
     def __str__(self):
         return "#" + self.name
