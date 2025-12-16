@@ -22,6 +22,15 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsUserAllIsAuthenticatedReadOnly,)
 
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.prefetch_related(
+                "following", "posts", "posts__hashtags"
+            )
+
+        return queryset
+
     def get_serializer_class(self):
         if self.action == "list":
             return UserListSerializer

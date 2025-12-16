@@ -19,39 +19,20 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ("id", "author", "content", "media_files", "shared_post", "hashtags")
 
     def create(self, validated_data):
+        hashtags_data = validated_data.pop("hashtags", [])
         with transaction.atomic():
             post = Post.objects.create(**validated_data)
-            if validated_data.get("hashtags"):
-                hashtags = validated_data.pop("hashtags")
-                for hashtag in hashtags:
-                    hashtag = Hashtag.objects.get_or_create(**hashtag)
-                    post.hashtags.add(hashtag)
+            for hashtag_data in hashtags_data:
+                hashtag, _ = Hashtag.objects.get_or_create(**hashtag_data)
+                post.hashtags.add(hashtag)
             return post
 
 
-class PostPreviewSerializer(PostSerializer):
-    author = serializers.StringRelatedField(many=False, read_only=True)
-    content_preview = serializers.SerializerMethodField(read_only=True)
-
-    class Meta(PostSerializer.Meta):
-        fields = ("author", "content_preview")
-
-    @staticmethod
-    def get_content_preview(post):
-        output = {}
-        if post.content:
-            output["content"] = post.content[:250]
-        if post.media_files:
-            output["media_files"] = post.media_files.url
-        return output
-
-
-class PostListSerializer(PostPreviewSerializer):
+class PostListSerializer(PostSerializer):
     likes = serializers.IntegerField(read_only=True)
     shares = serializers.IntegerField(read_only=True)
     comments_num = serializers.IntegerField(read_only=True)
     hashtags = serializers.StringRelatedField(many=True, read_only=True)
-    shared_post = PostPreviewSerializer(many=False, read_only=True)
 
     class Meta:
         model = Post
@@ -59,7 +40,6 @@ class PostListSerializer(PostPreviewSerializer):
             "id",
             "author",
             "media_files",
-            "shared_post",
             "content_preview",
             "hashtags",
             "likes",
@@ -69,19 +49,20 @@ class PostListSerializer(PostPreviewSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    reactions = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="name"
+    )
+
     class Meta:
         model = Comment
-        fields = ("id", "content", "media_files")
+        fields = ("id", "content", "media_files", "reactions")
 
 
 class CommentPostSerializer(CommentSerializer):
     author = serializers.StringRelatedField(many=False, read_only=True)
 
     class Meta(CommentSerializer.Meta):
-        fields = CommentSerializer.Meta.fields + (
-            "author",
-            "created_at",
-        )
+        fields = CommentSerializer.Meta.fields + ("author", "created_at")
 
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -106,9 +87,11 @@ class SharedPostSerializer(PostListSerializer):
 
 
 class RepostSerializer(PostListSerializer):
+    reposted_by = serializers.StringRelatedField(read_only=True, source="author")
+
     class Meta:
         model = Post
-        fields = ("id", "author", "content")
+        fields = ("id", "reposted_by", "content")
 
 
 class RepostMakeSerializer(PostSerializer):

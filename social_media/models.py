@@ -37,18 +37,12 @@ class Post(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
+    @property
     def content_preview(self):
         output = self.content
         if len(output) > 250:
             output = output[:250] + "..."
         return output
-
-    def shared_post_info(self):
-        return {
-            "post_id": self.id,
-            "sharer": self.author.first_name + " " + self.author.last_name,
-            "sharer_id": self.author.id,
-        }
 
 
 class Comment(models.Model):
