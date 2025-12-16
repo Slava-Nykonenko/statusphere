@@ -6,20 +6,22 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from social_media.models import Post, Comment, Reaction
+from social_media.permissions import IsAuthorAllIsAuthenticatedReadOnly
 from social_media.serializers import (
     PostSerializer,
     PostListSerializer,
     PostRetrieveSerializer,
     CommentSerializer,
     ReactionSerializer,
-    RepostSerializer,
     RepostMakeSerializer,
+    RepostSerializer,
 )
 
 
 class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
 
     def get_queryset(self):
         queryset = self.queryset
@@ -46,6 +48,7 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
 
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
@@ -55,6 +58,7 @@ class CommentViewSet(ModelViewSet):
 class ReactionViewSet(ModelViewSet):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
+    permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -81,6 +85,14 @@ class ReactionViewSet(ModelViewSet):
 class RepostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = RepostMakeSerializer
+    permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return RepostSerializer
+        elif self.action == "retrieve":
+            return PostSerializer
+        return RepostMakeSerializer
 
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_pk"])

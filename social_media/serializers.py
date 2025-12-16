@@ -40,9 +40,9 @@ class PostPreviewSerializer(PostSerializer):
     def get_content_preview(post):
         output = {}
         if post.content:
-            output["content"] = post.content
+            output["content"] = post.content[:250]
         if post.media_files:
-            output["media_files"] = post.media_files[:250]
+            output["media_files"] = post.media_files.url
         return output
 
 

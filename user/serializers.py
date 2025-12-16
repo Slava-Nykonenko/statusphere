@@ -78,22 +78,24 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class UserRetrieveSerializer(UserSerializer):
+class UserListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "full_name", "avatar")
+
+    @staticmethod
+    def get_full_name(obj):
+        return obj.first_name + " " + obj.last_name
+
+
+class UserRetrieveSerializer(UserListSerializer):
     posts = PostListSerializer(many=True, read_only=True)
 
-    class Meta(UserSerializer.Meta):
-        fields = (
-            "first_name",
-            "last_name",
+    class Meta(UserListSerializer.Meta):
+        fields = UserListSerializer.Meta.fields + (
             "birth_date",
-            "avatar",
             "bio",
             "posts",
         )
-
-
-class UserListSerializer(UserSerializer):
-    full_name = serializers.CharField(read_only=True, source="__str__")
-
-    class Meta(UserSerializer.Meta):
-        fields = ("id", "full_name", "avatar")
