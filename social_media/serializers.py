@@ -1,3 +1,5 @@
+from re import findall
+
 from django.db import transaction
 from rest_framework import serializers
 
@@ -5,26 +7,30 @@ from social_media.models import Post, Hashtag, Comment, Reaction
 
 
 class HashtagSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=50)
+
     class Meta:
         model = Hashtag
         fields = ("name",)
+        extra_kwargs = {"name": {"validators": []}}
 
 
 class PostSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(many=False, read_only=True)
-    hashtags = HashtagSerializer(many=True, read_only=False, required=False)
 
     class Meta:
         model = Post
-        fields = ("id", "author", "content", "media_files", "shared_post", "hashtags")
+        fields = ("id", "author", "content", "media_files", "shared_post")
 
     def create(self, validated_data):
-        hashtags_data = validated_data.pop("hashtags", [])
+        content = validated_data.get("content", "")
+        extracted_tags = findall(r"#(\w+)", content)
+
         with transaction.atomic():
             post = Post.objects.create(**validated_data)
-            for hashtag_data in hashtags_data:
-                hashtag, _ = Hashtag.objects.get_or_create(**hashtag_data)
-                post.hashtags.add(hashtag)
+            for tag_name in extracted_tags:
+                tag, _ = Hashtag.objects.get_or_create(name=tag_name.lower())
+                post.hashtags.add(tag)
             return post
 
 
