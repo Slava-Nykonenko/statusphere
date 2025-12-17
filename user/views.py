@@ -1,3 +1,5 @@
+from django.db.models import Value, CharField
+from django.db.models.functions import Concat
 from rest_framework import generics, status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
@@ -8,7 +10,11 @@ from django.utils.translation import gettext as _
 
 from user.models import User
 from user.permissions import IsUserAllIsAuthenticatedReadOnly, AnonOnly
-from user.serializers import UserSerializer, UserRetrieveSerializer, UserListSerializer
+from user.serializers import (
+    UserSerializer,
+    UserRetrieveSerializer,
+    UserListSerializer
+)
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -27,10 +33,19 @@ class UserViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        if self.action in ("list", "retrieve"):
+        if self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 "following", "posts", "posts__hashtags"
             )
+
+        elif self.action == "list":
+            search_query = self.request.query_params.get("search")
+            if search_query:
+                return queryset.annotate(
+                    full_name=Concat(
+                        "first_name", Value(" "), "last_name", output_field=CharField()
+                    )
+                ).filter(full_name__icontains=search_query)
 
         return queryset
 
