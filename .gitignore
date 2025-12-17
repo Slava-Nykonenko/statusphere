@@ -82,3 +82,5 @@ crashlytics-build.properties
 fabric.properties
 .ruff_cache/
 pyrightconfig.json
+generate_test_data.py
+

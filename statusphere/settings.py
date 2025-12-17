@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "rest_framework.authtoken",
+    "rest_framework.authtoken",  # change into JWT
     "debug_toolbar",
     "social_media",
     "user",
@@ -130,7 +130,8 @@ MEDIA_URL = "/media/"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.TokenAuthentication",  # change into JWT
     ],
     "DEFAULT_PERMISSION_CLASSES": "rest_framework.permissions.IsAuthenticated",
+    "DEFAULT_PAGINATION_CLASS": "core.pagination.ListsPagination",
 }

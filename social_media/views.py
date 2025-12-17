@@ -31,10 +31,8 @@ class PostViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ("list", "retrieve"):
-
-            queryset = queryset.prefetch_related(
-                "author", "shared_post", "hashtags", "reposts"
-            )
+            queryset = queryset.select_related("author", "shared_post")
+            queryset = queryset.prefetch_related("hashtags")
 
             if self.action == "retrieve":
                 comment_reactions_prefetch = Prefetch(
@@ -57,14 +55,24 @@ class PostViewSet(ModelViewSet):
                 ).prefetch_related(
                     comments_prefetch,
                     reactions_prefetch,
+                    "reposts",
                     "reposts__author",
                 )
 
-            following = self.request.user.following.all().values_list("id", flat=True)
-            me = self.request.user.id
-            queryset = queryset.filter(
-                Q(author_id__in=following) | Q(author=me)
-            ).annotate(
+            elif self.action == "list":
+                content = self.request.query_params.get("content")
+                if content:
+                    queryset = queryset.filter(content__icontains=content)
+                else:
+                    following = self.request.user.following.all().values_list(
+                        "id", flat=True
+                    )
+                    me = self.request.user.id
+                    queryset = queryset.filter(
+                        Q(author_id__in=following) | Q(author=me)
+                    ).distinct()
+
+            queryset = queryset.annotate(
                 likes=Count("reactions", distinct=True),
                 shares=Count("reposts", distinct=True),
                 comments_num=Count("comments", distinct=True),
@@ -161,11 +169,17 @@ class HashtagViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
     def get_queryset(self):
         queryset = self.queryset
         if self.action == "list":
+            name = self.request.query_params.get("name")
+            if name:
+                queryset = queryset.filter(name__icontains=name)
+
+        elif self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 "posts",
                 "posts__hashtags",
                 "posts__author",
             )
+
         return queryset
 
     def get_serializer_class(self):
