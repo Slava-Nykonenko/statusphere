@@ -92,10 +92,14 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserRetrieveSerializer(UserListSerializer):
     posts = PostListSerializer(many=True, read_only=True)
+    following = UserListSerializer(many=True, read_only=True)
+    followers = UserListSerializer(many=True, read_only=True)
 
     class Meta(UserListSerializer.Meta):
         fields = UserListSerializer.Meta.fields + (
             "birth_date",
             "bio",
             "posts",
+            "following",
+            "followers",
         )

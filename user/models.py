@@ -46,7 +46,10 @@ class UserManager(BaseUserManager):
 
 
 def user_image_path(instance: "User", filename: str) -> pathlib.Path:
-    filename = f"user-{instance.id}-{uuid4()}" + pathlib.Path(filename).suffix
+    filename = (
+        f"{instance.first_name}-{instance.last_name}-{uuid4()}"
+        + pathlib.Path(filename).suffix
+    )
     return pathlib.Path("uploads/images") / pathlib.Path(filename)
 
 
