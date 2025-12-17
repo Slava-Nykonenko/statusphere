@@ -1,12 +1,13 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch, Q
 from django.db.models.aggregates import Count
-from rest_framework import status
-from rest_framework.generics import get_object_or_404
+from rest_framework import status, mixins
+from rest_framework.generics import get_object_or_404, RetrieveAPIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from social_media.models import Post, Comment, Reaction
+from social_media.models import Post, Comment, Reaction, Hashtag
 from social_media.permissions import IsAuthorAllIsAuthenticatedReadOnly
 from social_media.serializers import (
     PostSerializer,
@@ -17,6 +18,8 @@ from social_media.serializers import (
     RepostMakeSerializer,
     RepostSerializer,
     SharedPostSerializer,
+    HashtagListSerializer,
+    HashtagRetrieveSerializer,
 )
 
 
@@ -148,3 +151,24 @@ class RepostViewSet(ModelViewSet):
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
         serializer.save(author=self.request.user, shared_post=post)
+
+
+class HashtagViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+    queryset = Hashtag.objects.all()
+    serializer_class = HashtagListSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action == "list":
+            queryset = queryset.prefetch_related(
+                "posts",
+                "posts__hashtags",
+                "posts__author",
+            )
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return HashtagRetrieveSerializer
+        return HashtagListSerializer

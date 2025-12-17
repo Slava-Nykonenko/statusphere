@@ -54,6 +54,18 @@ class PostListSerializer(PostSerializer):
         )
 
 
+class HashtagListSerializer(HashtagSerializer):
+    class Meta(HashtagSerializer.Meta):
+        fields = HashtagSerializer.Meta.fields + ("id",)
+
+
+class HashtagRetrieveSerializer(HashtagListSerializer):
+    posts = PostListSerializer(many=True, read_only=True)
+
+    class Meta(HashtagListSerializer.Meta):
+        fields = HashtagListSerializer.Meta.fields + ("posts",)
+
+
 class CommentSerializer(serializers.ModelSerializer):
     reactions = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="name"

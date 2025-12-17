@@ -7,10 +7,12 @@ from social_media.views import (
     CommentViewSet,
     ReactionViewSet,
     RepostViewSet,
+    HashtagViewSet,
 )
 
 router = DefaultRouter()
 router.register("posts", PostViewSet)
+router.register("hashtags", HashtagViewSet)
 posts_router = routers.NestedSimpleRouter(router, "posts", lookup="post")
 posts_router.register("comments", CommentViewSet, basename="post-comments")
 posts_router.register("reactions", ReactionViewSet, basename="post-reactions")
