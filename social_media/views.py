@@ -29,53 +29,35 @@ class PostViewSet(ModelViewSet):
     permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
 
     def get_queryset(self):
-        queryset = self.queryset
-        if self.action in ("list", "retrieve"):
-            queryset = queryset.select_related("author", "shared_post")
-            queryset = queryset.prefetch_related("hashtags")
+        queryset = Post.objects.optimized().with_counts()
 
-            if self.action == "retrieve":
-                comment_reactions_prefetch = Prefetch(
-                    "reactions", queryset=Reaction.objects.select_related("author")
-                )
+        if self.action == "list":
+            content = self.request.query_params.get("content")
+            if content:
+                return queryset.filter(content__icontains=content)
 
-                comments_prefetch = Prefetch(
-                    "comments",
-                    queryset=Comment.objects.select_related("author").prefetch_related(
-                        comment_reactions_prefetch
-                    ),
-                )
+            return queryset.for_user_feed(self.request.user).prefetch_related(
+                "hashtags"
+            )
 
-                reactions_prefetch = Prefetch(
-                    "reactions", queryset=Reaction.objects.select_related("author")
-                )
-
-                queryset = queryset.select_related(
-                    "shared_post__author"
-                ).prefetch_related(
-                    comments_prefetch,
-                    reactions_prefetch,
-                    "reposts",
-                    "reposts__author",
-                )
-
-            elif self.action == "list":
-                content = self.request.query_params.get("content")
-                if content:
-                    queryset = queryset.filter(content__icontains=content)
-                else:
-                    following = self.request.user.following.all().values_list(
-                        "id", flat=True
-                    )
-                    me = self.request.user.id
-                    queryset = queryset.filter(
-                        Q(author_id__in=following) | Q(author=me)
-                    ).distinct()
-
-            queryset = queryset.annotate(
-                likes=Count("reactions", distinct=True),
-                shares=Count("reposts", distinct=True),
-                comments_num=Count("comments", distinct=True),
+        if self.action == "retrieve":
+            comment_reactions_prefetch = Prefetch(
+                "reactions", queryset=Reaction.objects.select_related("author")
+            )
+            comments_prefetch = Prefetch(
+                "comments",
+                queryset=Comment.objects.select_related("author").prefetch_related(
+                    comment_reactions_prefetch
+                ),
+            )
+            reactions_prefetch = Prefetch(
+                "reactions", queryset=Reaction.objects.select_related("author")
+            )
+            return queryset.prefetch_related(
+                "hashtags",
+                "reposts__author",
+                comments_prefetch,
+                reactions_prefetch,
             )
 
         return queryset

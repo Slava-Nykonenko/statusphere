@@ -4,9 +4,31 @@ from uuid import uuid4
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q, Count
 from django.utils.translation import gettext as _
 
 from statusphere import settings
+
+
+class PostQuerySet(models.QuerySet):
+    def with_counts(self):
+        return self.annotate(
+            likes=Count("reactions", distinct=True),
+            shares=Count("reposts", distinct=True),
+            comments_num=Count("comments", distinct=True),
+        )
+
+    def for_user_feed(self, user):
+        if not user.is_authenticated:
+            return self.none()
+
+        following_ids = user.following.values_list("id", flat=True)
+        return self.filter(Q(author_id__in=following_ids) | Q(author=user))
+
+    def optimized(self):
+        return self.select_related(
+            "author", "shared_post", "shared_post__author"
+        ).prefetch_related("hashtags")
 
 
 def user_media_files_path(instance: "Post" | "Comment", filename: str) -> pathlib.Path:
@@ -33,6 +55,8 @@ class Post(models.Model):
     )
     hashtags = models.ManyToManyField("Hashtag", blank=True, related_name="posts")
     reactions = GenericRelation("Reaction")
+
+    objects = PostQuerySet.as_manager()
 
     class Meta:
         ordering = ["-created_at"]
