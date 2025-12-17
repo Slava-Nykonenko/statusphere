@@ -1,5 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.db.models.aggregates import Count
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -28,9 +28,11 @@ class PostViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ("list", "retrieve"):
+
             queryset = queryset.prefetch_related(
                 "author", "shared_post", "hashtags", "reposts"
             )
+
             if self.action == "retrieve":
                 comment_reactions_prefetch = Prefetch(
                     "reactions", queryset=Reaction.objects.select_related("author")
@@ -55,7 +57,11 @@ class PostViewSet(ModelViewSet):
                     "reposts__author",
                 )
 
-            queryset = queryset.annotate(
+            following = self.request.user.following.all().values_list("id", flat=True)
+            me = self.request.user.id
+            queryset = queryset.filter(
+                Q(author_id__in=following) | Q(author=me)
+            ).annotate(
                 likes=Count("reactions", distinct=True),
                 shares=Count("reposts", distinct=True),
                 comments_num=Count("comments", distinct=True),
