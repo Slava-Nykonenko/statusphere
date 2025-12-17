@@ -1,5 +1,5 @@
 from django.urls import path, include
-from rest_framework_nested import routers
+from rest_framework_nested.routers import NestedSimpleRouter
 from rest_framework.routers import DefaultRouter
 
 from social_media.views import (
@@ -13,7 +13,7 @@ from social_media.views import (
 router = DefaultRouter()
 router.register("posts", PostViewSet)
 router.register("hashtags", HashtagViewSet)
-posts_router = routers.NestedSimpleRouter(router, "posts", lookup="post")
+posts_router = NestedSimpleRouter(router, "posts", lookup="post")
 posts_router.register("comments", CommentViewSet, basename="post-comments")
 posts_router.register("reactions", ReactionViewSet, basename="post-reactions")
 posts_router.register("reposts", RepostViewSet, basename="post-reposts")

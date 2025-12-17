@@ -80,10 +80,22 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
 class UserListSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField(read_only=True)
+    followers_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+    is_following = serializers.BooleanField(read_only=True)
+    is_followers = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = get_user_model()
-        fields = ("id", "full_name", "avatar")
+        fields = (
+            "id",
+            "full_name",
+            "avatar",
+            "followers_count",
+            "following_count",
+            "is_following",
+            "is_followers",
+        )
 
     @staticmethod
     def get_full_name(obj):
@@ -92,14 +104,10 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserRetrieveSerializer(UserListSerializer):
     posts = PostListSerializer(many=True, read_only=True)
-    following = UserListSerializer(many=True, read_only=True)
-    followers = UserListSerializer(many=True, read_only=True)
 
     class Meta(UserListSerializer.Meta):
         fields = UserListSerializer.Meta.fields + (
             "birth_date",
             "bio",
             "posts",
-            "following",
-            "followers",
         )
