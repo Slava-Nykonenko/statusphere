@@ -19,9 +19,6 @@ class PostQuerySet(models.QuerySet):
         )
 
     def for_user_feed(self, user):
-        if not user.is_authenticated:
-            return self.none()
-
         following_ids = user.following.values_list("id", flat=True)
         return self.filter(Q(author_id__in=following_ids) | Q(author=user))
 

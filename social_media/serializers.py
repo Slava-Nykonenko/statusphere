@@ -54,18 +54,6 @@ class PostListSerializer(PostSerializer):
         )
 
 
-class HashtagListSerializer(HashtagSerializer):
-    class Meta(HashtagSerializer.Meta):
-        fields = HashtagSerializer.Meta.fields + ("id",)
-
-
-class HashtagRetrieveSerializer(HashtagListSerializer):
-    posts = PostListSerializer(many=True, read_only=True)
-
-    class Meta(HashtagListSerializer.Meta):
-        fields = HashtagListSerializer.Meta.fields + ("posts",)
-
-
 class CommentSerializer(serializers.ModelSerializer):
     reactions = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="name"
@@ -118,10 +106,7 @@ class RepostMakeSerializer(PostSerializer):
 
 
 class PostRetrieveSerializer(PostListSerializer):
-    reactions = ReactionPostSerializer(many=True, read_only=True)
-    comments = CommentPostSerializer(many=True, read_only=True)
     shared_post = SharedPostSerializer(many=False, read_only=True)
-    reposts = RepostSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
@@ -133,9 +118,6 @@ class PostRetrieveSerializer(PostListSerializer):
             "shared_post",
             "hashtags",
             "likes",
-            "reactions",
             "shares",
-            "reposts",
             "comments_num",
-            "comments",
         )

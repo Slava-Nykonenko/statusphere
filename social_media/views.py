@@ -18,8 +18,6 @@ from social_media.serializers import (
     RepostMakeSerializer,
     RepostSerializer,
     SharedPostSerializer,
-    HashtagListSerializer,
-    HashtagRetrieveSerializer,
 )
 
 
@@ -33,34 +31,22 @@ class PostViewSet(ModelViewSet):
 
         if self.action == "list":
             content = self.request.query_params.get("content")
+            hashtag = self.request.query_params.get("hastag")
             if content:
                 return queryset.filter(content__icontains=content)
+            if hashtag:
+                return queryset.filter(hashtag__icontains=hashtag)
 
             return queryset.for_user_feed(self.request.user).prefetch_related(
                 "hashtags"
             )
 
         if self.action == "retrieve":
-            comment_reactions_prefetch = Prefetch(
-                "reactions", queryset=Reaction.objects.select_related("author")
-            )
-            comments_prefetch = Prefetch(
-                "comments",
-                queryset=Comment.objects.select_related("author").prefetch_related(
-                    comment_reactions_prefetch
-                ),
-            )
-            reactions_prefetch = Prefetch(
-                "reactions", queryset=Reaction.objects.select_related("author")
-            )
             return queryset.prefetch_related(
                 "hashtags",
-                "reposts__author",
-                comments_prefetch,
-                reactions_prefetch,
             )
 
-        return queryset
+        return queryset.order_by("-created_at")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -82,7 +68,7 @@ class CommentViewSet(ModelViewSet):
         queryset = Comment.objects.select_related("author", "post").prefetch_related(
             "reactions"
         )
-        return queryset
+        return queryset.order_by("created_at")
 
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
@@ -141,30 +127,3 @@ class RepostViewSet(ModelViewSet):
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
         serializer.save(author=self.request.user, shared_post=post)
-
-
-class HashtagViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
-    queryset = Hashtag.objects.all()
-    serializer_class = HashtagListSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-
-    def get_queryset(self):
-        queryset = self.queryset
-        if self.action == "list":
-            name = self.request.query_params.get("name")
-            if name:
-                queryset = queryset.filter(name__icontains=name)
-
-        elif self.action == "retrieve":
-            queryset = queryset.prefetch_related(
-                "posts",
-                "posts__hashtags",
-                "posts__author",
-            )
-
-        return queryset
-
-    def get_serializer_class(self):
-        if self.action == "retrieve":
-            return HashtagRetrieveSerializer
-        return HashtagListSerializer
