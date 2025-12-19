@@ -2,8 +2,6 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from django.utils.translation import gettext as _
 
-from social_media.serializers import PostListSerializer
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -103,11 +101,9 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class UserRetrieveSerializer(UserListSerializer):
-    posts = PostListSerializer(many=True, read_only=True)
 
     class Meta(UserListSerializer.Meta):
         fields = UserListSerializer.Meta.fields + (
             "birth_date",
             "bio",
-            "posts",
         )

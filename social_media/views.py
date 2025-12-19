@@ -27,15 +27,26 @@ class PostViewSet(ModelViewSet):
     permission_classes = (IsAuthorAllIsAuthenticatedReadOnly,)
 
     def get_queryset(self):
-        queryset = Post.objects.optimized().with_counts()
+        queryset = Post.objects.optimized().with_counts().order_by("-created_at")
 
         if self.action == "list":
             content = self.request.query_params.get("content")
-            hashtag = self.request.query_params.get("hastag")
-            if content:
-                return queryset.filter(content__icontains=content)
-            if hashtag:
-                return queryset.filter(hashtag__icontains=hashtag)
+            hashtag = self.request.query_params.get("hashtag")
+            author_id = self.request.query_params.get("author_id")
+
+            if content or hashtag or author_id:
+                if author_id == "me":
+                    queryset = queryset.filter(author=self.request.user)
+                elif author_id:
+                    queryset = queryset.filter(author__id=author_id)
+
+                if content:
+                    queryset = queryset.filter(content__icontains=content)
+
+                if hashtag:
+                    queryset = queryset.filter(hashtag__icontains=hashtag)
+
+                return queryset.distinct()
 
             return queryset.for_user_feed(self.request.user).prefetch_related(
                 "hashtags"
@@ -46,7 +57,7 @@ class PostViewSet(ModelViewSet):
                 "hashtags",
             )
 
-        return queryset.order_by("-created_at")
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":

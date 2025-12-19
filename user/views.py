@@ -42,9 +42,6 @@ class UserViewSet(ModelViewSet):
                         )
                     ).filter(full_name__icontains=search_query)
 
-            if self.action == "retrieve":
-                queryset = queryset.prefetch_related("posts", "posts__hashtags")
-
             queryset = queryset.annotate(
                 followers_count=Count("followers", distinct=True),
                 following_count=Count("following", distinct=True),
@@ -108,3 +105,8 @@ class UserViewSet(ModelViewSet):
             if page
             else Response(serializer.data)
         )
+
+    @action(detail=True, methods=["get"], url_path="list")
+    def users_posts(self, request, pk=None):
+        user = self.get_object()
+        posts = user.posts.prefetch_related("comments").order_by("created_at")
