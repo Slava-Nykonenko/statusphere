@@ -1,20 +1,14 @@
 from django.db.models import Value, CharField, Count, Exists, OuterRef
 from django.db.models.functions import Concat
 from rest_framework import generics, status
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from rest_framework.viewsets import ModelViewSet
 from django.utils.translation import gettext as _
 
 from user.models import User
 from user.permissions import IsUserAllIsAuthenticatedReadOnly, AnonOnly
 from user.serializers import UserSerializer, UserRetrieveSerializer, UserListSerializer
-
-
-class CreateTokenView(ObtainAuthToken):
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 
 class CreateUserView(generics.CreateAPIView):

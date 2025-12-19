@@ -1,4 +1,6 @@
 from celery import shared_task
+from django.core.management import call_command
+
 from .models import Post
 
 
@@ -11,3 +13,9 @@ def publish_scheduled_post(post_id: int) -> str:
         return f"Post {post_id} published successfully."
     except Post.DoesNotExist:
         return f"Post {post_id} not found."
+
+
+@shared_task
+def flush_expired_tokens():
+    call_command("flushexpiredtokens")
+    return "Expired tokens flushed successfully."
