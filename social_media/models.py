@@ -52,6 +52,8 @@ class Post(models.Model):
     )
     hashtags = models.ManyToManyField("Hashtag", blank=True, related_name="posts")
     reactions = GenericRelation("Reaction")
+    published = models.BooleanField(default=True)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
 
     objects = PostQuerySet.as_manager()
 

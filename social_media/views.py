@@ -19,6 +19,7 @@ from social_media.serializers import (
     RepostSerializer,
     SharedPostSerializer,
 )
+from .tasks import publish_scheduled_post
 
 
 class PostViewSet(ModelViewSet):
@@ -30,6 +31,8 @@ class PostViewSet(ModelViewSet):
         queryset = Post.objects.optimized().with_counts().order_by("-created_at")
 
         if self.action == "list":
+            queryset = queryset.filter(published=True)
+
             content = self.request.query_params.get("content")
             hashtag = self.request.query_params.get("hashtag")
             author_id = self.request.query_params.get("author_id")
@@ -44,7 +47,7 @@ class PostViewSet(ModelViewSet):
                     queryset = queryset.filter(content__icontains=content)
 
                 if hashtag:
-                    queryset = queryset.filter(hashtag__icontains=hashtag)
+                    queryset = queryset.filter(hashtags__name__icontains=hashtag)
 
                 return queryset.distinct()
 
@@ -53,9 +56,12 @@ class PostViewSet(ModelViewSet):
             )
 
         if self.action == "retrieve":
-            return queryset.prefetch_related(
+            queryset = queryset.prefetch_related(
                 "hashtags",
             )
+            #
+            # if self.request.user != self.get_object().author:
+            #     return queryset.filter(published=True)
 
         return queryset
 
@@ -67,7 +73,14 @@ class PostViewSet(ModelViewSet):
         return PostSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        scheduled_at = self.request.data.get("scheduled_at")
+
+        if scheduled_at:
+            post = serializer.save(author=self.request.user, published=False)
+            publish_scheduled_post.apply_async(args=[post.id], eta=scheduled_at)
+
+        else:
+            serializer.save(author=self.request.user)
 
 
 class CommentViewSet(ModelViewSet):
