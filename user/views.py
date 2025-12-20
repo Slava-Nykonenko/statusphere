@@ -1,5 +1,6 @@
 from django.db.models import Value, CharField, Count, Exists, OuterRef
 from django.db.models.functions import Concat
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -25,7 +26,7 @@ class UserViewSet(ModelViewSet):
         queryset = User.objects.all()
         if self.action in ("list", "retrieve", "followers", "following"):
             if self.action == "list":
-                search_query = self.request.query_params.get("search")
+                search_query = self.request.query_params.get("user")
                 if search_query:
                     queryset = queryset.annotate(
                         full_name=Concat(
@@ -100,7 +101,17 @@ class UserViewSet(ModelViewSet):
             else Response(serializer.data)
         )
 
-    @action(detail=True, methods=["get"], url_path="list")
-    def users_posts(self, request, pk=None):
-        user = self.get_object()
-        posts = user.posts.prefetch_related("comments").order_by("created_at")
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "user",
+                type={"type": "string"},
+                description="Find users by first, last or full name. This is "
+                "case-insensitive and performs a partial match "
+                "(i.e. '?user=albert', or '?user=einst', or "
+                "'?user=albert%20einstein' will find 'Albert Einstein').",
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
