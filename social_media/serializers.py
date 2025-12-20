@@ -1,4 +1,5 @@
 from re import findall
+from typing import Any
 
 from django.db import transaction
 from rest_framework import serializers
@@ -29,7 +30,7 @@ class PostSerializer(serializers.ModelSerializer):
             "scheduled_at",
         )
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> Post:
         content = validated_data.get("content", "")
         extracted_tags = findall(r"#(\w+)", content)
 
@@ -81,6 +82,13 @@ class CommentPostSerializer(CommentSerializer):
 class ReactionSerializer(serializers.ModelSerializer):
     object_id = serializers.IntegerField(write_only=True)
     object_type = serializers.CharField(write_only=True)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        data = super(ReactionSerializer, self).validate(attrs)
+        Reaction.validate_reaction(
+            reaction_type=attrs["type"], error_to_raise=serializers.ValidationError
+        )
+        return data
 
     class Meta:
         model = Reaction

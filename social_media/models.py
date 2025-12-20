@@ -4,25 +4,26 @@ from uuid import uuid4
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q, Count, QuerySet
 from django.utils.translation import gettext as _
+from rest_framework.exceptions import ValidationError
 
 from statusphere import settings
 
 
 class PostQuerySet(models.QuerySet):
-    def with_counts(self):
+    def with_counts(self) -> QuerySet:
         return self.annotate(
             likes=Count("reactions", distinct=True),
             shares=Count("reposts", distinct=True),
             comments_num=Count("comments", distinct=True),
         )
 
-    def for_user_feed(self, user):
+    def for_user_feed(self, user) -> QuerySet:
         following_ids = user.following.values_list("id", flat=True)
         return self.filter(Q(author_id__in=following_ids) | Q(author=user))
 
-    def optimized(self):
+    def optimized(self) -> QuerySet:
         return self.select_related(
             "author", "shared_post", "shared_post__author"
         ).prefetch_related("hashtags")
@@ -61,7 +62,7 @@ class Post(models.Model):
         ordering = ["-created_at"]
 
     @property
-    def content_preview(self):
+    def content_preview(self) -> str:
         output = self.content
         if len(output) > 250:
             output = output[:250] + "..."
@@ -81,7 +82,7 @@ class Comment(models.Model):
     class Meta:
         ordering = ["created_at"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.author.first_name} {self.author.last_name}: "
             f"{self.content[:50]}..."
@@ -94,7 +95,7 @@ class Hashtag(models.Model):
     class Meta:
         ordering = ["name"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "#" + self.name
 
 
@@ -119,9 +120,31 @@ class Reaction(models.Model):
             models.Index(fields=["content_type", "object_id"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.author.first_name} {self.author.last_name} reacted "
             f"{self.get_type_display()} on {self.content_type.model} "
             f"#{self.object_id}"
+        )
+
+    @staticmethod
+    def validate_reaction(reaction_type: str, error_to_raise):
+        if not isinstance(reaction_type, str):
+            raise error_to_raise(
+                {"type": "Reaction type must be a string"},
+            )
+
+        valid_reactions = [choice[0] for choice in Reaction.REACTION_CHOICES]
+        type_normalized = reaction_type.upper()
+        if type_normalized not in valid_reactions:
+            raise error_to_raise(
+                {
+                    "type": f"Reaction type must be one of {valid_reactions}",
+                }
+            )
+
+    def clean(self) -> None:
+        Reaction.validate_reaction(
+            reaction_type=self.type,
+            error_to_raise=ValidationError,
         )
