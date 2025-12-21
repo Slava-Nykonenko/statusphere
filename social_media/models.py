@@ -1,4 +1,5 @@
 import pathlib
+from typing import Union
 from uuid import uuid4
 
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -21,7 +22,7 @@ class PostQuerySet(models.QuerySet):
 
     def for_user_feed(self, user) -> QuerySet:
         following_ids = user.following.values_list("id", flat=True)
-        return self.filter(Q(author_id__in=following_ids) | Q(author=user))
+        return self.filter(Q(author_id__in=following_ids) or Q(author=user))
 
     def optimized(self) -> QuerySet:
         return self.select_related(
@@ -29,7 +30,9 @@ class PostQuerySet(models.QuerySet):
         ).prefetch_related("hashtags")
 
 
-def user_media_files_path(instance: "Post" | "Comment", filename: str) -> pathlib.Path:
+def user_media_files_path(
+    instance: Union["Post", "Comment"], filename: str
+) -> pathlib.Path:
     model_name = instance.__class__.__name__.lower()
     unique_filename = f"{model_name}-{uuid4()}" + pathlib.Path(filename).suffix
     return pathlib.Path("uploads/media_files") / pathlib.Path(unique_filename)

@@ -55,7 +55,25 @@ class UserViewSet(ModelViewSet):
             return UserListSerializer
         elif self.action == "retrieve":
             return UserRetrieveSerializer
+        elif self.action == "me":
+            return UserSerializer
         return UserSerializer
+
+    @extend_schema(
+        summary="Retrieve or update the authenticated user's own profile",
+        responses={200: UserSerializer},
+    )
+    @action(detail=False, methods=["get", "put", "patch"], url_path="me")
+    def me(self, request):
+        user = request.user
+        if request.method == "GET":
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @action(detail=True, methods=["get"], url_path="toggle-follow")
     def toggle_follow(self, request, pk=None):
