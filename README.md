@@ -6,18 +6,25 @@
 Statusphere is a RESTful API designed to power modern social networking platforms. It handles complex user relationships, media-rich posts, nested engagement (comments and reactions), and automated content scheduling.
 
 ### Key Features:
-* **Advanced User System:** Email-based authentication with custom profiles and a non-symmetrical follow/follower system.
-* **Smart Content:** Posts support media uploads, automatic hashtag extraction, and "Shared Post" (Repost) functionality.
-* **Engagement Engine:** Nested comments and generic reactions (Like, Love, Wow, etc.) using `GenericRelations`.
-* **Automated Scheduling:** Schedule posts for future publication using Celery and Redis.
-* **Monitoring:** Includes Flower for monitoring Celery tasks at `http://localhost:5555`.
+* **Advanced User System:** Email-based authentication with custom profiles 
+and a non-symmetrical follow/follower system.
+* **Smart Content:** Posts support media uploads, automatic hashtag extraction,
+and "Shared Post" (Repost) functionality.
+* **Engagement Engine:** Nested comments and generic reactions (Like, Love, 
+Wow, etc.) using `GenericRelations`.
+* **Automated Scheduling:** Schedule posts for future publication using Celery 
+and Redis.
+* **Monitoring:** Includes Flower for monitoring Celery tasks at 
+`http://localhost:5555`.
 
 ### Architecture
 
-
 The project is split into two primary apps:
-* **User App:** Manages custom authentication, profiles, and social graphs (followers).
-* **Social Media App:** Manages posts, comments, hashtags, and the task-scheduling logic.
+
+* **User App:** Manages custom authentication, profiles, and social graphs 
+(followers).
+* **Social Media App:** Manages posts, reactions, comments, hashtags, and the 
+task-scheduling logic.
 
 ## Installing / Getting started
 
@@ -29,7 +36,7 @@ Ensure you have the following installed:
 
 #### 1. Clone the repository
 ```shell
-  git clone [https://github.com/Slava-Nykonenko/statusphere.git](https://github.com/Slava-Nykonenko/statusphere.git)
+  git clone https://github.com/Slava-Nykonenko/statusphere.git
   cd statusphere
   python -m venv venv
 ```
@@ -85,11 +92,12 @@ For quick testing, you can use the following default user:
 - Password: ```user-password```
 
 #### Authentication Flow
-**Obtain Token:** POST /api/user/token/ with email/password.
+**Obtain Token:** `POST /api/user/token/` with email/password.
 
-**Authorize:** Include the access token in your headers: Authorization: Bearer <your-access-token>
+**Authorize:** Include the access token in your headers: 
+`Authorization: Bearer <your-access-token>`
 
-**Explore:** Access the API at /api/user/me/ or via Swagger.
+**Explore:** Access the API at `/api/user/me/` or via Swagger.
 
 ### Initial Configuration
 
@@ -157,8 +165,8 @@ environment. Key steps include:
 slava.nykon@gmail.com directly. We value your effort to improve the security 
 and privacy of this project!
 - Related projects:
-  - https://github.com/Slava-Nykonenko/emerald-railroads
-  - https://github.com/Slava-Nykonenko/skyway-airlines
+  - [Emerald Railroads](https://github.com/Slava-Nykonenko/emerald-railroads)
+  - [Skyway Airlines](https://github.com/Slava-Nykonenko/skyway-airlines)
 
 ## Author
 Viacheslav Nykonenko<br>

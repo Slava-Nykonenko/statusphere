@@ -1,6 +1,10 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from django.utils.translation import gettext as _
+
+from user.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,11 +34,11 @@ class UserSerializer(serializers.ModelSerializer):
             },
         }
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> User:
         """Create User with encrypted password"""
         return get_user_model().objects.create_user(**validated_data)
 
-    def update(self, instance, validated_data):
+    def update(self, instance: User, validated_data: dict[str, Any]) -> User:
         """Update User with encrypted password"""
         password = validated_data.get("password", None)
         user = super().update(instance, validated_data)
@@ -56,7 +60,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
     )
     token = serializers.CharField(label=_("Token"), read_only=True)
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         email = attrs.get("email")
         password = attrs.get("password")
 
@@ -96,7 +100,7 @@ class UserListSerializer(serializers.ModelSerializer):
         )
 
     @staticmethod
-    def get_full_name(obj):
+    def get_full_name(obj: User) -> str:
         return obj.first_name + " " + obj.last_name
 
 

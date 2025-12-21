@@ -1,5 +1,6 @@
 from django.db.models import Value, CharField, Count, Exists, OuterRef
 from django.db.models.functions import Concat
+from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, status
 from rest_framework.decorators import action
@@ -64,7 +65,7 @@ class UserViewSet(ModelViewSet):
         responses={200: UserSerializer},
     )
     @action(detail=False, methods=["get", "put", "patch"], url_path="me")
-    def me(self, request):
+    def me(self, request: HttpRequest) -> Response:
         user = request.user
         if request.method == "GET":
             serializer = self.get_serializer(user)
@@ -93,31 +94,30 @@ class UserViewSet(ModelViewSet):
         me.following.add(user_to_follow)
         return Response({"status": _("Followed")}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["get"], url_path="followers")
-    def followers(self, request, pk=None):
-        user = self.get_object()
-        followers = self.get_queryset().filter(following=user).order_by("first_name")
+    def _get_relationship_response(
+            self,
+            user: User,
+            filter_field: str
+    ) -> Response:
+        queryset = self.get_queryset().filter(**{filter_field: user}).order_by(
+            "first_name")
 
-        page = self.paginate_queryset(followers)
-        serializer = self.get_serializer(page or followers, many=True)
-        return (
-            self.get_paginated_response(serializer.data)
-            if page
-            else Response(serializer.data)
-        )
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page or queryset, many=True)
+
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], url_path="followers")
+    def followers(self, request: HttpRequest, pk=None) -> Response:
+        user = self.get_object()
+        return self._get_relationship_response(user, "following")
 
     @action(detail=True, methods=["get"], url_path="following")
-    def following(self, request, pk=None):
+    def following(self, request: HttpRequest, pk=None) -> Response:
         user = self.get_object()
-        following = self.get_queryset().filter(followers=user).order_by("first_name")
-
-        page = self.paginate_queryset(following)
-        serializer = self.get_serializer(page or following, many=True)
-        return (
-            self.get_paginated_response(serializer.data)
-            if page
-            else Response(serializer.data)
-        )
+        return self._get_relationship_response(user, "followers")
 
     @extend_schema(
         parameters=[
