@@ -15,7 +15,7 @@ from statusphere import settings
 class PostQuerySet(models.QuerySet):
     def with_counts(self) -> QuerySet:
         return self.annotate(
-            likes=Count("reactions", distinct=True),
+            reactions_num=Count("reactions", distinct=True),
             shares=Count("reposts", distinct=True),
             comments_num=Count("comments", distinct=True),
         )

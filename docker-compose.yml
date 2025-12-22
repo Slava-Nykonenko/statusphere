@@ -2,6 +2,7 @@ services:
   statusphere:
     build:
       context: .
+    image: slavanykonenko/statusphere-api:latest
     env_file:
       - .env
     ports:
