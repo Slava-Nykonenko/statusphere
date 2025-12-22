@@ -4,6 +4,8 @@ LABEL authors="slava.nykon@gmail.com"
 ENV PYTHONUNBUFFERED=1
 WORKDIR /statusphere
 
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt

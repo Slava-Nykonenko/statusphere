@@ -25,10 +25,12 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from social_media.views import api_home
 from statusphere import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("home/", api_home, name="home"),
     path("api/social/", include("social_media.urls"), name="social_media"),
     path("api/user/", include("user.urls"), name="user"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
