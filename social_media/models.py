@@ -22,7 +22,7 @@ class PostQuerySet(models.QuerySet):
 
     def for_user_feed(self, user) -> QuerySet:
         following_ids = user.following.values_list("id", flat=True)
-        return self.filter(Q(author_id__in=following_ids) or Q(author=user))
+        return self.filter(Q(author_id__in=following_ids) | Q(author=user))
 
     def optimized(self) -> QuerySet:
         return self.select_related(

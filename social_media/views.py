@@ -91,8 +91,8 @@ class PostViewSet(ModelViewSet):
         scheduled_at = self.request.data.get("scheduled_at")
 
         if scheduled_at:
-            post = serializer.save(author=self.request.user, published=False)
-            publish_scheduled_post.apply_async(args=[post.id], eta=scheduled_at)
+            serializer.save(author=self.request.user, published=False)
+            publish_scheduled_post.apply_async(eta=scheduled_at)
 
         else:
             serializer.save(author=self.request.user)
