@@ -64,7 +64,7 @@ class PostListSerializer(PostSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     reactions = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field="name"
+        many=True, read_only=True, slug_field="type"
     )
 
     class Meta:
