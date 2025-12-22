@@ -1,10 +1,14 @@
+import os
 from typing import Type
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
+from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
+from rest_framework.decorators import permission_classes
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -20,7 +24,18 @@ from social_media.serializers import (
     RepostSerializer,
     SharedPostSerializer,
 )
+from statusphere import settings
 from .tasks import publish_scheduled_post
+
+
+@permission_classes([AllowAny])
+def api_home(request):
+    readme_path = os.path.join(settings.BASE_DIR, "README.md")
+    if os.path.exists(readme_path):
+        with open(readme_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return HttpResponse(content, content_type="text/plain")
+    return HttpResponse("Statusphere API is running.", content_type="text/plain")
 
 
 class PostViewSet(ModelViewSet):
@@ -76,8 +91,8 @@ class PostViewSet(ModelViewSet):
         scheduled_at = self.request.data.get("scheduled_at")
 
         if scheduled_at:
-            post = serializer.save(author=self.request.user, published=False)
-            publish_scheduled_post.apply_async(args=[post.id], eta=scheduled_at)
+            serializer.save(author=self.request.user, published=False)
+            publish_scheduled_post.apply_async(eta=scheduled_at)
 
         else:
             serializer.save(author=self.request.user)

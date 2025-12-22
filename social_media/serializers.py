@@ -43,7 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(PostSerializer):
-    likes = serializers.IntegerField(read_only=True)
+    reactions_num = serializers.IntegerField(read_only=True)
     shares = serializers.IntegerField(read_only=True)
     comments_num = serializers.IntegerField(read_only=True)
     hashtags = serializers.StringRelatedField(many=True, read_only=True)
@@ -56,7 +56,7 @@ class PostListSerializer(PostSerializer):
             "media_files",
             "content_preview",
             "hashtags",
-            "likes",
+            "reactions_num",
             "shares",
             "comments_num",
         )
@@ -132,7 +132,7 @@ class PostRetrieveSerializer(PostListSerializer):
             "media_files",
             "shared_post",
             "hashtags",
-            "likes",
+            "reactions_num",
             "shares",
             "comments_num",
         )

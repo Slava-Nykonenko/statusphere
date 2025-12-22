@@ -94,13 +94,10 @@ class UserViewSet(ModelViewSet):
         me.following.add(user_to_follow)
         return Response({"status": _("Followed")}, status=status.HTTP_200_OK)
 
-    def _get_relationship_response(
-            self,
-            user: User,
-            filter_field: str
-    ) -> Response:
-        queryset = self.get_queryset().filter(**{filter_field: user}).order_by(
-            "first_name")
+    def _get_relationship_response(self, user: User, filter_field: str) -> Response:
+        queryset = (
+            self.get_queryset().filter(**{filter_field: user}).order_by("first_name")
+        )
 
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page or queryset, many=True)
